@@ -854,6 +854,34 @@ func (g *generator) variantRep(file *gen.File, dir wit.Direction, v *wit.Variant
 	cm := file.Import(g.opts.cmPackage)
 	stringio.Write(&b, cm, ".Variant[", g.typeRep(file, dir, disc), ", ", typeShape, ", ", g.typeRep(file, dir, align), "]\n\n")
 
+	// Emit the String() func
+	stringsName := file.DeclareName("strings" + GoName(goName, true))
+	stringio.Write(&b, "var ", stringsName, " = [", fmt.Sprintf("%d", len(v.Cases)), "]string {\n")
+	for _, c := range v.Cases {
+		stringio.Write(&b, `"`, c.Name, `"`, ",\n")
+	}
+	b.WriteString("}\n\n")
+
+	b.WriteString(formatDocComments("String implements [fmt.Stringer], returning the variant name of e.", true))
+	stringio.Write(&b, "func (e ", goName, ") String() string {\n")
+	stringio.Write(&b, "return ", stringsName, "[e.Tag()]\n")
+	b.WriteString("}\n\n")
+
+	// Emit the GetVariant()
+	getVariantName := file.DeclareName("mapVariant" + GoName(goName, true))
+	stringio.Write(&b, "var ", getVariantName, " = map[string]", g.typeRep(file, dir, disc), "{\n")
+	for i, c := range v.Cases {
+		stringio.Write(&b, `"`, c.Name, `": `, fmt.Sprintf("%d,\n", i))
+	}
+	b.WriteString("}\n\n")
+
+	b.WriteString(formatDocComments(fmt.Sprintf("ToVariant%s returns the variant tag of input string.", GoName(goName, true)), true))
+	stringio.Write(&b, "func ToVariant", GoName(goName, true), "(s string) ", GoName(goName, true), "{\n")
+	stringio.Write(&b, "var data struct{}\n")
+	stringio.Write(&b, "var intval = ", getVariantName, "[s]\n")
+	stringio.Write(&b, "return cm.New[", GoName(goName, true), "](intval, data)\n")
+	b.WriteString("}\n\n")
+
 	// Emit cases
 	for i, c := range v.Cases {
 		caseNum := strconv.Itoa(i)
