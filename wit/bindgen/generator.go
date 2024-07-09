@@ -875,7 +875,7 @@ func (g *generator) variantRep(file *gen.File, dir wit.Direction, v *wit.Variant
 	}
 	b.WriteString("}\n\n")
 
-	b.WriteString(formatDocComments(fmt.Sprintf("ToVariant%s returns the variant tag of input string.", GoName(goName, true)), true))
+	b.WriteString(formatDocComments(fmt.Sprintf("ToVariant%s returns the variant for the given input string.", GoName(goName, true)), true))
 	stringio.Write(&b, "func ToVariant", GoName(goName, true), "(s string) ", GoName(goName, true), "{\n")
 	stringio.Write(&b, "var data struct{}\n")
 	stringio.Write(&b, "var intval = ", getVariantName, "[s]\n")
